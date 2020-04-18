@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Guess who I am!</title>
+    <link rel="icon" href="/favicon.ico" type="image/x-icon">
+
+    <link rel="stylesheet" href="style.css">
+    <!-- Go to www.addthis.com/dashboard to customize your tools -->
+    <script type="text/javascript" src="//s7.addthis.com/js/300/addthis_widget.js#pubid=ra-5e9ad456e45fcfbb"></script>
+
+</head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="https://www.w3schools.com/w3css/4/w3.css">
+
+<body style="">
+    <h1 align="center" style="color:white;">Guess who I am</h1>
+    <script class="jsbin" src="https://ajax.googleapis.com/ajax/libs/jquery/1/jquery.min.js"></script>
+    <div class="file-upload">
+        <!-- <button class="file-upload-btn" type="button" onclick="predict()">동물상 예측하기</button> -->
+
+        <div class="image-upload-wrap">
+            <input class="file-upload-input" type='file' onchange="readURL(this);" accept="image/*" />
+            <div class="drag-text">
+                <h3>Drag and drop a file or select add Image</h3>
+            </div>
+        </div>
+        <div class="file-upload-content">
+            <img class="file-upload-image" id="face-image" src="#" alt="your image" />
+            <div class="image-title-wrap">
+                <button type="button" onclick="removeUpload()" class="remove-image">Remove</button>
+            </div>
+        </div>
+
+        <!-- Loading page -->
+        <div id="pp" class="loading hideit">Loading&#8230;</div>
+        <!-- Insert here -->
+        <p align="center" class="result-message"></p>
+        <p>
+            Puppyish:
+        </p>
+        <div class="w3-light-grey w3-round-xlarge">
+            <div class="w3-container w3-blue w3-round-xlarge" style="width:25%" id="per1">25%</div>
+        </div>
+
+        <p>
+            Catfish:
+        </p>
+        <div class="w3-light-grey w3-round-xlarge">
+            <div class="w3-container w3-blue w3-round-xlarge" style="width:25%" id="per2">25%</div>
+        </div>
+
+        <p>
+            Dinosaurish:
+        </p>
+        <div class="w3-light-grey w3-round-xlarge">
+            <div class="w3-container w3-blue w3-round-xlarge" style="width:25%" id="per3">25%</div>
+        </div>
+
+        <p>
+            Bunnyish:
+        </p>
+        <div class="w3-light-grey w3-round-xlarge">
+            <div class="w3-container w3-blue w3-round-xlarge" style="width:25%" id="per4">25%</div>
+        </div>
+
+        <!-- Insert here -->
+
+        <!-- Go to www.addthis.com/dashboard to customize your tools -->
+        <p>
+
+        </p>
+
+        <!-- Go to www.addthis.com/dashboard to customize your tools -->
+        <div class="addthis_inline_share_toolbox"></div>
+
+    </div>
+    <div id="disqus_thread"></div>
+    <script>
+        /**
+         *  RECOMMENDED CONFIGURATION VARIABLES: EDIT AND UNCOMMENT THE SECTION BELOW TO INSERT DYNAMIC VALUES FROM YOUR PLATFORM OR CMS.
+         *  LEARN WHY DEFINING THESE VARIABLES IS IMPORTANT: https://disqus.com/admin/universalcode/#configuration-variables*/
+        /*
+        var disqus_config = function () {
+        this.page.url = PAGE_URL;  // Replace PAGE_URL with your page's canonical URL variable
+        this.page.identifier = PAGE_IDENTIFIER; // Replace PAGE_IDENTIFIER with your page's unique identifier variable
+        };
+        */
+        (function() { // DON'T EDIT BELOW THIS LINE
+            var d = document,
+                s = d.createElement('script');
+            s.src = 'https://animal-face-1.disqus.com/embed.js';
+            s.setAttribute('data-timestamp', +new Date());
+            (d.head || d.body).appendChild(s);
+        })();
+    </script>
+    <noscript>Please enable JavaScript to view the
+        <a href="https://disqus.com/?ref_noscript">comments powered by Disqus.</a>
+    </noscript>
+
+    <div id="webcam-container"></div>
+    <div id="label-container"></div>
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@1.3.1/dist/tf.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@teachablemachine/image@0.8/dist/teachablemachine-image.min.js"></script>
+
+    <script>
+        function readURL(input) {
+            if (input.files && input.files[0]) {
+                var reader = new FileReader();
+                reader.onload = function(e) {
+                    $('.image-upload-wrap').hide();
+                    $('.file-upload-image').attr('src', e.target.result);
+                    $('.file-upload-content').show();
+                    $('.image-title').html(input.files[0].name);
+                };
+                reader.readAsDataURL(input.files[0]);
+                document.getElementById("pp").classList.remove('hideit');
+                init().then(function() {
+                    predict();
+                });
+            } else {
+                removeUpload();
+            }
+        }
+
+        function removeUpload() {
+            $('.file-upload-input').replaceWith($('.file-upload-input').clone());
+            $('.file-upload-content').hide();
+            $('.image-upload-wrap').show();
+            document.getElementById("per1").style.width = "25%";
+            document.getElementById("per2").style.width = "25%";
+            document.getElementById("per3").style.width = "25%";
+            document.getElementById("per4").style.width = "25%";
+            document.getElementById("per1").innerHTML = "25%";
+            document.getElementById("per2").innerHTML = "25%";
+            document.getElementById("per3").innerHTML = "25%";
+            document.getElementById("per4").innerHTML = "25%";
+        }
+        $('.image-upload-wrap').bind('dragover', function() {
+            $('.image-upload-wrap').addClass('image-dropping');
+        });
+        $('.image-upload-wrap').bind('dragleave', function() {
+            $('.image-upload-wrap').removeClass('image-dropping');
+        });
+    </script>
+
+    <script type="text/javascript">
+        // More API functions here:
+        // https://github.com/googlecreativelab/teachablemachine-community/tree/master/libraries/image
+        // the link to your model provided by Teachable Machine export panel
+        const URL = "https://teachablemachine.withgoogle.com/models/QMIxVdKMB/";
+        let model, webcam, labelContainer, maxPredictions;
+        // Load the image model and setup the webcam
+        async function init() {
+            const modelURL = URL + "model.json";
+            const metadataURL = URL + "metadata.json";
+            model = await tmImage.load(modelURL, metadataURL);
+            maxPredictions = model.getTotalClasses();
+            labelContainer = document.getElementById("label-container");
+            for (let i = 0; i < maxPredictions; i++) { // and class labels
+                labelContainer.appendChild(document.createElement("div"));
+            }
+        }
+        async function predict() {
+            // predict can take in an image, video or canvas html element
+            var image = document.getElementById("face-image")
+            const prediction = await model.predict(image, false);
+            prediction.sort((a, b) => parseFloat(b.probability) - parseFloat(a.probability));
+            document.getElementById("per1").style.width = (prediction[0].probability.toFixed(2) * 100) + "%";
+            document.getElementById("per2").style.width = (prediction[1].probability.toFixed(2) * 100) + "%";
+            document.getElementById("per3").style.width = (prediction[2].probability.toFixed(2) * 100) + "%";
+            document.getElementById("per4").style.width = (prediction[3].probability.toFixed(2) * 100) + "%";
+            document.getElementById("per1").innerHTML = (prediction[0].probability.toFixed(2) * 100) + "%";
+            document.getElementById("per2").innerHTML = (prediction[1].probability.toFixed(2) * 100) + "%";
+            document.getElementById("per3").innerHTML = (prediction[2].probability.toFixed(2) * 100) + "%";
+            document.getElementById("per4").innerHTML = (prediction[3].probability.toFixed(2) * 100) + "%";
+            document.getElementById("pp").classList.add('hideit');
+            var res;
+            switch (prediction[0].className) {
+                case "강아지상":
+                    res = "ʏᴏᴜ ᴀʀᴇ ᴛʜᴇ ᴄᴜᴛᴇꜱᴛ ᴘᴇʀꜱᴏɴ."
+                    break;
+                case "고양이상":
+                    res = "You are a beautiful person with sexy eyes."
+                    break;
+                case "공룡상":
+                    res = "You are very charismatic."
+                    break;
+                case "토끼상":
+                    res = "You have really beautiful eyes."
+                    break;
+                default:
+                    res = "default"
+            }
+            $('.result-message').html(res);
+            //for (let i = 0; i < maxPredictions; i++) {
+            //const classPrediction = prediction[i].className + ": " + prediction[i].probability.toFixed(2);
+            //document.getElementById("per1").innerHTML = classPrediction;
+            //labelContainer.childNodes[i].innerHTML = classPrediction;
+            //}
+        }
+    </script>
+
+    <script>
+        $(function color_change() {
+            var c = ["linear-gradient(to top left, #33ccff 0%, #ff99cc 100%)", "#CA9794", "#85708D", "linear-gradient(to top left, #99ffcc 0%, #66ccff 100%)", "linear-gradient(to top left, #ff99cc 0%, #66ccff 100%)"];
+            document.body.style.background = c[(Math.floor((Math.random() * 5)))];
+            //return "background-color:"+c[Math.floor(Math.random() * 4)]+";";
+        });
+    </script>
+</body>
+
+</html>
